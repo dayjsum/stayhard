@@ -1,0 +1,29 @@
+# Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+**/Generated.xcconfig
+**/Flutter.podspec
+**/flutter_export_environment.sh
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Android
+**/local.properties
+**/captures/
+**/.cxx/
+*.keystore
+
+# iOS
+**/Pods/
+**/DerivedData/
+
+# Misc
+*.log
+*.swp
+.DS_Store
