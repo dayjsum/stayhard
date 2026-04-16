@@ -256,6 +256,7 @@ class NotificationService {
     final body = await NudgeSynthesizer.followUpBody(
       goal: g,
       dateKey: c.dateKey,
+      userDeferReason: c.reason,
     );
     final details = NotificationDetails(
       android: AndroidNotificationDetails(

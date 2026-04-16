@@ -1,7 +1,7 @@
 /// Planned **server-side** behavior for accounts, bans, and LLM/SMS abuse prevention.
 ///
-/// Client LLM wiring lives in `lib/config/llm_config.dart` + `RemoteLineGenerator`:
-/// point `STAYHARD_LLM_URL` at **your** proxy, not a raw provider from the app.
+/// Client calls **only your HTTPS API** (`llm_config.dart` + `RemoteLineGenerator`).
+/// Cache + LLM live on the server; the app never runs a model.
 ///
 /// The Flutter app must **not** be the source of truth for bans or rate limits: anyone
 /// can modify the client, clear storage, or script HTTP. All enforcement belongs in

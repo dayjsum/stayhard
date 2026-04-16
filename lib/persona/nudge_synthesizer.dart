@@ -3,13 +3,12 @@ import 'package:flutter/foundation.dart';
 import '../config/llm_config.dart';
 import '../models/goal_item.dart';
 import 'llm_bridge.dart';
-import 'ollama_line_generator.dart';
 import 'pattern_storage.dart';
 import 'remote_line_generator.dart';
 
-/// Follow-up lines: **Ollama** (local), **generic HTTP** proxy, or **local** packs.
+/// Follow-up lines: **your API** (cache + LLM server-side) or **local** fallback.
 ///
-/// Override with [bindGenerator] in tests.
+/// The app never runs an LLM. [bindGenerator] is for tests only.
 class NudgeSynthesizer {
   NudgeSynthesizer._();
 
@@ -18,9 +17,11 @@ class NudgeSynthesizer {
   /// Tests only — pass `null` to restore default behavior.
   static void bindGenerator(LineGenerator? g) => _bound = g;
 
+  /// [userDeferReason] is forwarded for your cache key when the user typed “not yet”.
   static Future<String> followUpBody({
     required GoalItem goal,
     required String dateKey,
+    String? userDeferReason,
   }) async {
     final pack = await PatternStorage.instance.getEffectiveMemePackId();
     final profile = await PatternStorage.instance.profileForGoal(goal.id);
@@ -32,33 +33,22 @@ class NudgeSynthesizer {
         dateKey: dateKey,
         dominantTheme: profile.dominantTheme,
         memePackId: pack,
+        userDeferReason: userDeferReason,
       );
     }
 
-    if (LlmConfig.useOllama) {
-      try {
-        return await const OllamaLineGenerator().followUpLine(
-          goal: goal,
-          dateKey: dateKey,
-          dominantTheme: profile.dominantTheme,
-          memePackId: pack,
-        );
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('StayHard Ollama failed → local fallback: $e');
-        }
-      }
-    } else if (LlmConfig.useGenericHttp) {
+    if (LlmConfig.isRemoteConfigured) {
       try {
         return await const RemoteLineGenerator().followUpLine(
           goal: goal,
           dateKey: dateKey,
           dominantTheme: profile.dominantTheme,
           memePackId: pack,
+          userDeferReason: userDeferReason,
         );
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('StayHard LLM remote failed → local fallback: $e');
+          debugPrint('StayHard API line failed → local fallback: $e');
         }
       }
     }
@@ -68,6 +58,7 @@ class NudgeSynthesizer {
       dateKey: dateKey,
       dominantTheme: profile.dominantTheme,
       memePackId: pack,
+      userDeferReason: userDeferReason,
     );
   }
 }
